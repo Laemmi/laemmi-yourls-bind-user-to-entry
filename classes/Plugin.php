@@ -213,13 +213,13 @@ class Plugin extends AbstractDefault
         }
 
         if($url_result->{self::SETTING_URL_USER_CREATE}) {
-            $cells['timestamp']['template'] = yourls__('Create', self::LOCALIZED_DOMAIN) . ': %date% (%user_create%)<br>';
+            $cells['timestamp']['template'] = '<div>' . yourls__('Create', self::LOCALIZED_DOMAIN) . ': %date% (%user_create%)</div>';
             $cells['timestamp']['user_create'] = $url_result->{self::SETTING_URL_USER_CREATE};
         }
 
         if(0 < strtotime($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})) {
-            $cells['timestamp']['template'] .=  yourls__('Changed', self::LOCALIZED_DOMAIN) .': %date_update% (%user_update%)';
-            $cells['timestamp']['date_update'] = $this->getDateTime($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('M d, Y H:i');
+            $cells['timestamp']['template'] .=  '<div>' . yourls__('Changed', self::LOCALIZED_DOMAIN) .': %date_update% (%user_update%)</div>';
+            $cells['timestamp']['date_update'] = $this->getDateTimeDisplay($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('M d, Y H:i');
             $cells['timestamp']['user_update'] = $url_result->{self::SETTING_URL_USER_UPDATE};
         }
 

@@ -133,8 +133,21 @@ class AbstractDefault
      */
     protected function getDateTime($time='now')
     {
-        $obj = new \DateTime($time);
-        return $obj;
+        $date = new \DateTime($time, new \DateTimeZone('UTC'));
+        return $date;
+    }
+
+    /**
+     * Return DateTime with correction
+     *
+     * @param string $time
+     * @return \DateTime
+     */
+    protected function getDateTimeDisplay($time='now')
+    {
+        $date = $this->getDateTime($time);
+        $date->modify('+' . YOURLS_HOURS_OFFSET .' hour');
+        return $date;
     }
 
     /**
