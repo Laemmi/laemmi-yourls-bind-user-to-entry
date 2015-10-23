@@ -212,12 +212,16 @@ class Plugin extends AbstractDefault
             return $cells;
         }
 
-        $cells['timestamp']['template'] =
-            yourls__('Create', self::LOCALIZED_DOMAIN) . ': %date% (%user_create%)<br>'.
-            yourls__('Changed', self::LOCALIZED_DOMAIN) .': %date_update% (%user_update%)';
-        $cells['timestamp']['user_create'] = $url_result->{self::SETTING_URL_USER_CREATE};
-        $cells['timestamp']['date_update'] = $this->getDateTime($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('M d, Y H:i');
-        $cells['timestamp']['user_update'] = $url_result->{self::SETTING_URL_USER_UPDATE};
+        if($url_result->{self::SETTING_URL_USER_CREATE}) {
+            $cells['timestamp']['template'] = yourls__('Create', self::LOCALIZED_DOMAIN) . ': %date% (%user_create%)<br>';
+            $cells['timestamp']['user_create'] = $url_result->{self::SETTING_URL_USER_CREATE};
+        }
+
+        if(0 < strtotime($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})) {
+            $cells['timestamp']['template'] .=  yourls__('Changed', self::LOCALIZED_DOMAIN) .': %date_update% (%user_update%)';
+            $cells['timestamp']['date_update'] = $this->getDateTime($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('M d, Y H:i');
+            $cells['timestamp']['user_update'] = $url_result->{self::SETTING_URL_USER_UPDATE};
+        }
 
         return $cells;
     }
