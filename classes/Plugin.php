@@ -32,10 +32,7 @@
  */
 namespace Laemmi\Yourls\Bind\User\To\Entry;
 
-/**
- * Class AbstractDefault
- */
-require_once 'Plugin/AbstractDefault.php';
+use Laemmi\Yourls\Plugin\AbstractDefault;
 
 /**
  * Class Plugin
