@@ -209,15 +209,27 @@ class Plugin extends AbstractDefault
             return $cells;
         }
 
+        $cells['timestamp']['template'] = '<div><span>' . yourls__('Create', self::LOCALIZED_DOMAIN) . ':</span> <span>%date%</span> <span>%user_create%</span></div>';
+        $cells['timestamp']['date'] = $this->getDateTimeDisplay()->setTimestamp($timestamp)->format('d.m.Y H:i');
+
         if($url_result->{self::SETTING_URL_USER_CREATE}) {
-            $cells['timestamp']['template'] = '<div>' . yourls__('Create', self::LOCALIZED_DOMAIN) . ': %date% (%user_create%)</div>';
-            $cells['timestamp']['user_create'] = $url_result->{self::SETTING_URL_USER_CREATE};
+            if(YOURLS_USER === $url_result->{self::SETTING_URL_USER_CREATE}) {
+                $cells['timestamp']['user_create'] = '<strong>' . $url_result->{self::SETTING_URL_USER_CREATE} . '</strong>';
+            } else {
+                $cells['timestamp']['user_create'] = $url_result->{self::SETTING_URL_USER_CREATE};
+            }
+        } else {
+            $cells['timestamp']['user_create'] = '';
         }
 
         if(0 < strtotime($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})) {
-            $cells['timestamp']['template'] .=  '<div>' . yourls__('Changed', self::LOCALIZED_DOMAIN) .': %date_update% (%user_update%)</div>';
-            $cells['timestamp']['date_update'] = $this->getDateTimeDisplay($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('M d, Y H:i');
-            $cells['timestamp']['user_update'] = $url_result->{self::SETTING_URL_USER_UPDATE};
+            $cells['timestamp']['template'] .=  '<div><span>' . yourls__('Changed', self::LOCALIZED_DOMAIN) .':</span> <span>%date_update%</span> <span>%user_update%</span></div>';
+            $cells['timestamp']['date_update'] = $this->getDateTimeDisplay($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('d.m.Y H:i');
+            if(YOURLS_USER === $url_result->{self::SETTING_URL_USER_UPDATE}) {
+                $cells['timestamp']['user_update'] = '<strong>' . $url_result->{self::SETTING_URL_USER_UPDATE} . '</strong>';
+            } else {
+                $cells['timestamp']['user_update'] = $url_result->{self::SETTING_URL_USER_UPDATE};
+            }
         }
 
         return $cells;
