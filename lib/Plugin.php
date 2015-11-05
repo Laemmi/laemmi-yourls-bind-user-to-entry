@@ -42,9 +42,9 @@ use Laemmi\Yourls\Plugin\AbstractDefault;
 class Plugin extends AbstractDefault
 {
     /**
-     * Localization domain
+     * Namespace
      */
-    const LOCALIZED_DOMAIN = 'laemmi-yourls-bind-user-to-entry';
+    const APP_NAMESPACE = 'laemmi-yourls-bind-user-to-entry';
 
     /**
      * Settings constants
@@ -107,7 +107,7 @@ class Plugin extends AbstractDefault
      */
     public function action_plugins_loaded()
     {
-        yourls_load_custom_textdomain(self::LOCALIZED_DOMAIN, realpath(dirname( __FILE__ ) . '/../translations'));
+        yourls_load_custom_textdomain(self::APP_NAMESPACE, realpath(dirname( __FILE__ ) . '/../translations'));
     }
 
     /**
@@ -120,7 +120,7 @@ class Plugin extends AbstractDefault
     {
         list($plugin) = $args;
 
-        if(false === stripos($plugin, 'laemmi-yourls-bind-user-to-entry')) {
+        if(false === stripos($plugin, self::APP_NAMESPACE)) {
             return;
         }
 
@@ -139,7 +139,7 @@ class Plugin extends AbstractDefault
     {
         list($plugin) = $args;
 
-        if(false === stripos($plugin, 'laemmi-yourls-bind-user-to-entry')) {
+        if(false === stripos($plugin, self::APP_NAMESPACE)) {
             return;
         }
 
@@ -209,7 +209,7 @@ class Plugin extends AbstractDefault
             return $cells;
         }
 
-        $cells['timestamp']['template'] = '<div><span>' . yourls__('Create', self::LOCALIZED_DOMAIN) . ':</span> <span>%date%</span> <span>%user_create%</span></div>';
+        $cells['timestamp']['template'] = '<div><span>' . yourls__('Create', self::APP_NAMESPACE) . ':</span> <span>%date%</span> <span>%user_create%</span></div>';
         $cells['timestamp']['date'] = $this->getDateTimeDisplay()->setTimestamp($timestamp)->format('d.m.Y H:i');
 
         if($url_result->{self::SETTING_URL_USER_CREATE}) {
@@ -223,7 +223,7 @@ class Plugin extends AbstractDefault
         }
 
         if(0 < strtotime($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})) {
-            $cells['timestamp']['template'] .=  '<div><span>' . yourls__('Changed', self::LOCALIZED_DOMAIN) .':</span> <span>%date_update%</span> <span>%user_update%</span></div>';
+            $cells['timestamp']['template'] .=  '<div><span>' . yourls__('Changed', self::APP_NAMESPACE) .':</span> <span>%date_update%</span> <span>%user_update%</span></div>';
             $cells['timestamp']['date_update'] = $this->getDateTimeDisplay($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('d.m.Y H:i');
             if(YOURLS_USER === $url_result->{self::SETTING_URL_USER_UPDATE}) {
                 $cells['timestamp']['user_update'] = '<strong>' . $url_result->{self::SETTING_URL_USER_UPDATE} . '</strong>';
@@ -300,8 +300,8 @@ class Plugin extends AbstractDefault
      */
     private function helperGetAllowedPermissions()
     {
-        if($this->getSession('login', 'easy_ldap')) {
-            $inter = array_intersect_key($this->_options['allowed_groups'], $this->getSession('groups', 'easy_ldap'));
+        if($this->getSession('login', 'laemmi-yourls-easy-ldap')) {
+            $inter = array_intersect_key($this->_options['allowed_groups'], $this->getSession('groups', 'laemmi-yourls-easy-ldap'));
             $permissions = [];
             foreach ($inter as $val) {
                 foreach ($val as $_val) {
