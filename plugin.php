@@ -28,7 +28,7 @@ Copyright 2015 laemmi
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * @category    laemmi-yourls-bind-user-to-enty
+ * @category    laemmi-yourls-bind-user-to-entry
  * @package     plugin.php
  * @author      Michael Lämmlein <ml@spacerabbit.de>
  * @copyright   ©2015 laemmi
@@ -49,6 +49,8 @@ if (!yourls_is_API()) {
             'allowed_groups' => defined('LAEMMI_EASY_LDAP_ALLOWED_GROUPS') ? json_decode(LAEMMI_EASY_LDAP_ALLOWED_GROUPS, true) : [],
         ]);
     } else {
-        echo 'Please install "laemmi-yourls-default-tools" first!';
+        if('activate' === (isset($_GET['action']) ? $_GET['action'] : null) && 'laemmi-yourls-bind-user-to-entry' === $_GET['plugin']) {
+            echo 'Please install "laemmi-yourls-default-tools" first!';
+        }
     }
 }
