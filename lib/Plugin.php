@@ -210,7 +210,7 @@ class Plugin extends AbstractDefault
         }
 
         $cells['timestamp']['template'] = '<div><span>' . yourls__('Create', self::APP_NAMESPACE) . ':</span> <span>%date%</span> <span>%user_create%</span></div>';
-        $cells['timestamp']['date'] = $this->getDateTimeDisplay()->setTimestamp($timestamp)->format('d.m.Y H:i');
+        $cells['timestamp']['date'] = $this->getDateTimeDisplay($timestamp)->format('d.m.Y H:i');
 
         if($url_result->{self::SETTING_URL_USER_CREATE}) {
             if(YOURLS_USER === $url_result->{self::SETTING_URL_USER_CREATE}) {
