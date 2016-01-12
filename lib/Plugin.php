@@ -20,8 +20,8 @@
  *
  * @category    Laemmi\Yourls\Bind\User\To\Entry
  * @package     Laemmi\Yourls\Bind\User\To\Entry
- * @author      Michael Lämmlein <ml@spacerabbit.de>
- * @copyright   ©2015 laemmi
+ * @author      Michael Lämmlein <laemmi@spacerabbit.de>
+ * @copyright   ©2015-2016 laemmi
  * @license     http://www.opensource.org/licenses/mit-license.php MIT-License
  * @version     1.0.0
  * @since       20.10.15
@@ -289,6 +289,42 @@ class Plugin extends AbstractDefault
         }
 
         return $where;
+    }
+
+    /**
+     * Yourls filter get_db_stats
+     *
+     * @return array
+     */
+    public function filter_get_db_stats()
+    {
+        list($return, $where) = func_get_args();
+
+        $permissions = $this->helperGetAllowedPermissions();
+
+        if(! isset($permissions[self::PERMISSION_LIST_SHOW])) {
+            $or = [
+                self::SETTING_URL_USER_CREATE . " IS NULL",
+                self::SETTING_URL_USER_CREATE . " = '" . YOURLS_USER . "'"
+            ];
+
+            $where .= " AND (" . implode(' OR ', $or) . ")";
+        }
+
+        if($where) {
+            $where = 'WHERE 1=1 ' . $where;
+        }
+
+        $sql = 'SELECT
+          COUNT(keyword) AS count_keyword,
+          SUM(clicks) AS sum_clicks
+          FROM ' . YOURLS_DB_TABLE_URL . '
+          %s';
+
+        $result = $this->db()->get_row(sprintf($sql, $where));
+        $return = array('total_links' => $result->count_keyword, 'total_clicks' => $result->sum_clicks);
+
+        return $return;
     }
 
     ####################################################################################################################
