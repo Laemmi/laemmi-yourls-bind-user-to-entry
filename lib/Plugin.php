@@ -209,7 +209,7 @@ class Plugin extends AbstractDefault
             return $cells;
         }
 
-        $cells['timestamp']['template'] = '<div><span>' . yourls__('Create', self::APP_NAMESPACE) . ':</span> <span>%date%</span> <span>%user_create%</span></div>';
+        $cells['timestamp']['template'] = '<div class="display-large"><div><span>' . yourls__('Create', self::APP_NAMESPACE) . ':</span> <span>%date%</span> <span>%user_create%</span></div>';
         $cells['timestamp']['date'] = $this->getDateTimeDisplay($timestamp)->format('d.m.Y H:i');
 
         if($url_result->{self::SETTING_URL_USER_CREATE}) {
@@ -223,7 +223,7 @@ class Plugin extends AbstractDefault
         }
 
         if(0 < strtotime($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})) {
-            $cells['timestamp']['template'] .=  '<div><span>' . yourls__('Changed', self::APP_NAMESPACE) .':</span> <span>%date_update%</span> <span>%user_update%</span></div>';
+            $cells['timestamp']['template'] .= '<div><span>' . yourls__('Changed', self::APP_NAMESPACE) .':</span> <span>%date_update%</span> <span>%user_update%</span></div>';
             $cells['timestamp']['date_update'] = $this->getDateTimeDisplay($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('d.m.Y H:i');
             if(YOURLS_USER === $url_result->{self::SETTING_URL_USER_UPDATE}) {
                 $cells['timestamp']['user_update'] = '<strong>' . $url_result->{self::SETTING_URL_USER_UPDATE} . '</strong>';
@@ -231,6 +231,27 @@ class Plugin extends AbstractDefault
                 $cells['timestamp']['user_update'] = $url_result->{self::SETTING_URL_USER_UPDATE};
             }
         }
+
+        $cells['timestamp']['template'] .= '</div>';
+
+        $title = [];
+        $cells['timestamp']['date_small'] = $this->getDateTimeDisplay($timestamp)->format('d.m.Y');
+        if($cells['timestamp']['user_create']) {
+            $title[] = yourls__('Create', self::APP_NAMESPACE) . ': %date% (%user_create_small%)';
+        } else {
+            $title[] = yourls__('Create', self::APP_NAMESPACE) . ': %date%';
+        }
+
+        if(isset($cells['timestamp']['date_update'])) {
+            $cells['timestamp']['date_small'] = $this->getDateTimeDisplay($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('d.m.Y');
+            $cells['timestamp']['user_update_small'] = strip_tags($cells['timestamp']['user_update']);
+            $title[] = yourls__('Changed', self::APP_NAMESPACE) . ': %date_update% (%user_update_small%)';
+        }
+
+        $title[] = yourls__('IP') . ': ' . $cells['ip']['ip'];
+
+        $cells['timestamp']['template'] .= '<div title="' . implode('&#13;', $title) .'" class="display-small">%date_small%</div>';
+        $cells['timestamp']['user_create_small'] = strip_tags($cells['timestamp']['user_create']);
 
         return $cells;
     }
