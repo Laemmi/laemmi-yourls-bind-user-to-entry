@@ -16,14 +16,24 @@ You must install "laemmi-yourls-default-tools" fist.
 ### Available config values
 #### Allowed ldap groupsnames with yourls action and list permissions
 define('LAEMMI_EASY_LDAP_ALLOWED_GROUPS', json_encode([
-    'MY-LDAP-GROUPNAME' => ['action-edit-other', 'action-delete-other', 'list-show-other']
+    'MY-LDAP-GROUPNAME' => ['action-edit-other', 'action-delete-other', 'action-add-ldapgroup', 'action-edit-ldapgroup',
+     'list-show-other', 'list-show-other-group', 'list-show-own-in-other-group', 'list-show-other-in-own-group']
+]));
+#### ldap groupsnames to set 
+define('LAEMMI_BIND_USER_TO_ENTRY_GROUPLIST', json_encode([
+	'MY-LDAP-GROUPNAME' => 'MY-LDAP-GROUPNAME',
+	'MY-LDAP-GROUPNAME2' => 'MY-LDAP-GROUPNAME2'
 ]));
 
 ### Permissions
 ##### Actions
 * action-edit-other = Edit other url
 * action-delete-other = Delete other url
+* action-add-ldapgroup = Add selected ldap group
+* action-edit-ldapgroup = Edit selected ldap group
 
 ##### List
 * list-show-other = Show other url
-
+* list-show-other-group = Show URLs from groups in which the user is not
+* list-show-own-in-other-group = Show own URLs are assigned to the groups in which the user is not
+* list-show-other-in-own-group = Show other URLs are assigned to the groups in which the user is in

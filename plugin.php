@@ -30,7 +30,7 @@ Copyright 2015 laemmi
  *
  * @category    laemmi-yourls-bind-user-to-entry
  * @package     plugin.php
- * @author      Michael Lämmlein <ml@spacerabbit.de>
+ * @author      Michael Lämmlein <laemmi@spacerabbit.de>
  * @copyright   ©2015 laemmi
  * @license     http://www.opensource.org/licenses/mit-license.php MIT-License
  * @version     1.0.0
@@ -43,10 +43,11 @@ if(!defined('YOURLS_ABSPATH'))die();
 if (!yourls_is_API()) {
     // Check if AbstractDefault class exists
     if(class_exists('Laemmi\Yourls\Plugin\AbstractDefault')) {
-        require_once 'lib/Plugin.php';
-        new Laemmi\Yourls\Bind\User\To\Entry\Plugin([
+        require_once 'lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php';
+        new Laemmi\Yourls\Plugin\BindUserToEntry\Plugin([
             'db' => $ydb,
             'allowed_groups' => defined('LAEMMI_EASY_LDAP_ALLOWED_GROUPS') ? json_decode(LAEMMI_EASY_LDAP_ALLOWED_GROUPS, true) : [],
+            'ldapgrouplist' => defined('LAEMMI_BIND_USER_TO_ENTRY_GROUPLIST') ? json_decode(LAEMMI_BIND_USER_TO_ENTRY_GROUPLIST, true) : [],
         ]);
     } else {
         if('activate' === (isset($_GET['action']) ? $_GET['action'] : null) && 'laemmi-yourls-bind-user-to-entry' === $_GET['plugin']) {

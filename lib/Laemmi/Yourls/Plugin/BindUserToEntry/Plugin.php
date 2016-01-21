@@ -18,8 +18,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * @category    Laemmi\Yourls\Bind\User\To\Entry
- * @package     Laemmi\Yourls\Bind\User\To\Entry
+ * @category    laemmi-yourls-bind-user-to-entry
+ * @package     Plugin.php
  * @author      Michael Lämmlein <laemmi@spacerabbit.de>
  * @copyright   ©2015-2016 laemmi
  * @license     http://www.opensource.org/licenses/mit-license.php MIT-License
@@ -30,14 +30,14 @@
 /**
  * Namespace
  */
-namespace Laemmi\Yourls\Bind\User\To\Entry;
+namespace Laemmi\Yourls\Plugin\BindUserToEntry;
 
 use Laemmi\Yourls\Plugin\AbstractDefault;
 
 /**
  * Class Plugin
  *
- * @package Laemmi\Yourls\Bind\User\To\Entry
+ * @package Laemmi\Yourls\Plugin\BindUserToEntry
  */
 class Plugin extends AbstractDefault
 {
@@ -53,12 +53,19 @@ class Plugin extends AbstractDefault
     const SETTING_URL_USER_UPDATE = 'laemmi_user_update';
     const SETTING_URL_TIMESTAMP_UPDATE = 'laemmi_timestamp_update';
 
+    const SETTING_URL_LDAPGROUP = 'laemmi_ldapgroup';
+
     /**
      * Permission constants
      */
     const PERMISSION_ACTION_EDIT = 'action-edit-other';
     const PERMISSION_ACTION_DELETE = 'action-delete-other';
     const PERMISSION_LIST_SHOW = 'list-show-other';
+    const PERMISSION_LIST_SHOW_OTHER_GROUP = 'list-show-other-group';
+    const PERMISSION_LIST_SHOW_OWN_IN_OTHER_GROUP = 'list-show-own-in-other-group';
+    const PERMISSION_LIST_SHOW_OTHER_IN_OWN_GROUP = 'list-show-other-in-own-group';
+    const PERMISSION_ACTION_ADD_GROUP = 'action-add-ldapgroup';
+    const PERMISSION_ACTION_EDIT_GROUP = 'action-edit-ldapgroup';
 
     /**
      * Settings for url table
@@ -68,7 +75,8 @@ class Plugin extends AbstractDefault
     protected $_setting_url = [
         self::SETTING_URL_USER_CREATE => ["field" => "VARCHAR(255) NULL"],
         self::SETTING_URL_USER_UPDATE => ["field" => "VARCHAR(255) NULL"],
-        self::SETTING_URL_TIMESTAMP_UPDATE => ["field" => "TIMESTAMP"]
+        self::SETTING_URL_TIMESTAMP_UPDATE => ["field" => "TIMESTAMP"],
+        self::SETTING_URL_LDAPGROUP => ["field" => "TEXT"]
     ];
 
     /**
@@ -86,18 +94,22 @@ class Plugin extends AbstractDefault
      * @var array
      */
     protected $_adminpermission = [
-        self::PERMISSION_ACTION_EDIT, self::PERMISSION_ACTION_DELETE, self::PERMISSION_LIST_SHOW
+        self::PERMISSION_ACTION_EDIT,
+        self::PERMISSION_ACTION_DELETE,
+        self::PERMISSION_LIST_SHOW,
+        self::PERMISSION_LIST_SHOW_OTHER_GROUP,
+        self::PERMISSION_LIST_SHOW_OWN_IN_OTHER_GROUP,
+        self::PERMISSION_ACTION_ADD_GROUP,
+        self::PERMISSION_ACTION_EDIT_GROUP,
     ];
 
     /**
-     * Constructor
-     *
-     * @param array $options
+     * Init
      */
-    public function __construct(array $options = [])
+    public function init()
     {
         $this->startSession();
-        parent::__construct($options);
+        $this->initTemplate();
     }
 
     ####################################################################################################################
@@ -107,7 +119,7 @@ class Plugin extends AbstractDefault
      */
     public function action_plugins_loaded()
     {
-        yourls_load_custom_textdomain(self::APP_NAMESPACE, realpath(dirname( __FILE__ ) . '/../translations'));
+        $this->loadTextdomain();
     }
 
     /**
@@ -149,6 +161,23 @@ class Plugin extends AbstractDefault
     }
 
     /**
+     * Action: html_head
+     *
+     * @param array $args
+     */
+    public function action_html_head(array $args)
+    {
+        list($context) = $args;
+
+        if('index' === $context) {
+            echo $this->getJsScript('assets/admin.js');
+            echo $this->getCssStyle();
+        }
+    }
+
+    ####################################################################################################################
+
+    /**
      * Action insert_link
      *
      * @param array $args
@@ -158,10 +187,19 @@ class Plugin extends AbstractDefault
     {
         list($insert, $url, $keyword, $title, $timestamp, $ip) = $args;
 
+        if($this->_hasPermission(self::PERMISSION_ACTION_ADD_GROUP)) {
+            $ldapgroup = $this->getRequest('ldapgroup');
+            $data = is_array($ldapgroup)?$ldapgroup:[];
+        } else {
+            $groups = $this->_getOwnGroups();
+            $data = [key($groups)];
+        }
+
         $this->updateUrlSetting([
             self::SETTING_URL_USER_CREATE => YOURLS_USER,
             self::SETTING_URL_USER_UPDATE => YOURLS_USER,
             self::SETTING_URL_TIMESTAMP_UPDATE => $this->getDateTime()->format('c'),
+            self::SETTING_URL_LDAPGROUP => json_encode($data),
         ], $keyword);
 
         // Use in table_add_row_cell_array
@@ -170,13 +208,14 @@ class Plugin extends AbstractDefault
         $url_result->{self::SETTING_URL_USER_CREATE} = YOURLS_USER;
         $url_result->{self::SETTING_URL_TIMESTAMP_UPDATE} = $this->getDateTime()->format('c');
         $url_result->{self::SETTING_URL_USER_UPDATE} = YOURLS_USER;
+        $url_result->{self::SETTING_URL_LDAPGROUP} = json_encode($data);
     }
 
     ####################################################################################################################
 
     /**
      * Filter edit_link
-     *s
+     *
      * @return mixed
      * @throws \Exception
      */
@@ -232,6 +271,20 @@ class Plugin extends AbstractDefault
             }
         }
 
+        if($url_result->{self::SETTING_URL_LDAPGROUP}) {
+            $cells['timestamp']['template'] .= '<div><span>' . yourls__('Groups', self::APP_NAMESPACE) . ':</span> <span>%ldap_groups%</span></div>';
+            $cells['timestamp']['ldap_groups'] = '';
+            $arr = json_decode($url_result->{self::SETTING_URL_LDAPGROUP}, true);
+            if (is_array($arr)) {
+                $ldap_groups = array_map(function ($val) {
+                    if (isset($this->_options['ldapgrouplist'][$val])) {
+                        return $this->_options['ldapgrouplist'][$val];
+                    }
+                }, $arr);
+                $cells['timestamp']['ldap_groups'] = implode(', ', $ldap_groups);
+            }
+        }
+
         $cells['timestamp']['template'] .= '</div>';
 
         $title = [];
@@ -246,6 +299,11 @@ class Plugin extends AbstractDefault
             $cells['timestamp']['date_small'] = $this->getDateTimeDisplay($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('d.m.Y');
             $cells['timestamp']['user_update_small'] = strip_tags($cells['timestamp']['user_update']);
             $title[] = yourls__('Changed', self::APP_NAMESPACE) . ': %date_update% (%user_update_small%)';
+        }
+
+        if(isset($cells['timestamp']['ldap_groups'])) {
+            $cells['timestamp']['ldap_groups_small'] = $cells['timestamp']['ldap_groups'];
+            $title[] = yourls__('Groups', self::APP_NAMESPACE) . ': %ldap_groups_small%';
         }
 
         $title[] = yourls__('IP') . ': ' . $cells['ip']['ip'];
@@ -264,7 +322,7 @@ class Plugin extends AbstractDefault
      */
     public function filter_table_add_row_action_array()
     {
-        global $url_result;
+        global $url_result, $keyword;
 
         list($actions) = func_get_args();
 
@@ -286,6 +344,25 @@ class Plugin extends AbstractDefault
             }
         }
 
+        if(! $this->_hasPermission(self::PERMISSION_ACTION_EDIT_GROUP)) {
+            return $actions;
+        }
+
+        $id = yourls_string2htmlid($keyword);
+
+        $href = yourls_nonce_url(
+            'laemmi_edit_ldapgroup_' . $id,
+            yourls_add_query_arg(['action' => 'laemmi_edit_ldapgroup', 'keyword' => $keyword], yourls_admin_url('admin-ajax.php'))
+        );
+
+        $actions['laemmi_edit_ldapgroup'] = [
+            'href' => $href,
+            'id' => '',
+            'title' => yourls__('Edit Group', self::APP_NAMESPACE),
+            'anchor' => 'edit_ldapgroup',
+            'onclick' => ''
+        ];
+
         return $actions;
     }
 
@@ -298,16 +375,7 @@ class Plugin extends AbstractDefault
     {
         list($where) = func_get_args();
 
-        $permissions = $this->helperGetAllowedPermissions();
-
-        if(! isset($permissions[self::PERMISSION_LIST_SHOW])) {
-            $or = [
-                self::SETTING_URL_USER_CREATE . " IS NULL",
-                self::SETTING_URL_USER_CREATE . " = '" . YOURLS_USER . "'"
-            ];
-
-            $where .= " AND (" . implode(' OR ', $or) . ")";
-        }
+        $where = $this->_getQuery($where);
 
         return $where;
     }
@@ -321,16 +389,7 @@ class Plugin extends AbstractDefault
     {
         list($return, $where) = func_get_args();
 
-        $permissions = $this->helperGetAllowedPermissions();
-
-        if(! isset($permissions[self::PERMISSION_LIST_SHOW])) {
-            $or = [
-                self::SETTING_URL_USER_CREATE . " IS NULL",
-                self::SETTING_URL_USER_CREATE . " = '" . YOURLS_USER . "'"
-            ];
-
-            $where .= " AND (" . implode(' OR ', $or) . ")";
-        }
+        $where = $this->_getQuery($where);
 
         if($where) {
             $where = 'WHERE 1=1 ' . $where;
@@ -346,5 +405,117 @@ class Plugin extends AbstractDefault
         $return = array('total_links' => $result->count_keyword, 'total_clicks' => $result->sum_clicks);
 
         return $return;
+    }
+
+    ####################################################################################################################
+
+    /**
+     * Action: yourls_ajax_laemmi_edit_ldapgroup
+     */
+    public function action_yourls_ajax_laemmi_edit_ldapgroup()
+    {
+        $keyword = yourls_sanitize_string($this->getRequest('keyword'));
+        $nonce = $this->getRequest('nonce');
+        $id = yourls_string2htmlid($keyword);
+
+        yourls_verify_nonce('laemmi_edit_ldapgroup_' . $id, $nonce, false, 'omg error');
+
+        $nonce = yourls_create_nonce('laemmi_edit_ldapgroup_save_' . $id);
+
+        $infos = yourls_get_keyword_infos($keyword);
+        $ldapgrouplist_value = (array) @json_decode($infos[self::SETTING_URL_LDAPGROUP], true);
+
+        $html = $this->getTemplate()->render('edit_row_ldapgroup', [
+            'keyword' => $keyword,
+            'nonce' => $nonce,
+            'id' => $id,
+            'ldapgrouplist' => $this->_options['ldapgrouplist'],
+            'ldapgrouplist_value' => $ldapgrouplist_value,
+        ]);
+
+        echo json_encode(['html' => $html]);
+    }
+
+    /**
+     * Action: yourls_ajax_laemmi_edit_ldapgroup_save
+     */
+    public function action_yourls_ajax_laemmi_edit_ldapgroup_save()
+    {
+        $keyword = yourls_sanitize_string($this->getRequest('keyword'));
+        $nonce = $this->getRequest('nonce');
+        $id = yourls_string2htmlid($keyword);
+
+        yourls_verify_nonce('laemmi_edit_ldapgroup_save_' . $id, $nonce, false, 'omg error');
+
+        $this->action_insert_link(['', '', $keyword, '', '', '']);
+
+        $return = [];
+        $return['status']  = 'success';
+        $return['message'] = yourls__('Link updated in database', self::APP_NAMESPACE);
+
+        echo json_encode($return);
+    }
+
+    ####################################################################################################################
+
+    /**
+     * Get sql query
+     *
+     * @param $where
+     * @return string
+     */
+    private function _getQuery($where)
+    {
+        $or_owngroups = $this->_getOwnGroups();
+        array_walk($or_owngroups, function (&$val, $key) {
+            $val = self::SETTING_URL_LDAPGROUP . " RLIKE '\"" . $key . "\"'";
+        });
+
+        if(! $this->_hasPermission(self::PERMISSION_LIST_SHOW)) {
+            $or = [];
+            if($this->_hasPermission(self::PERMISSION_LIST_SHOW_OTHER_IN_OWN_GROUP)) {
+                $or = $or_owngroups;
+            }
+            $or[] = self::SETTING_URL_USER_CREATE . " IS NULL";
+            $or[] = self::SETTING_URL_USER_CREATE . " = '" . YOURLS_USER . "'";
+
+            $where .= " AND (" . implode(' OR ', $or) . ")";
+        }
+
+        if(! $this->_hasPermission(self::PERMISSION_LIST_SHOW_OTHER_GROUP)) {
+            $or = $or_owngroups;
+            $or[] = self::SETTING_URL_LDAPGROUP . " IS NULL";
+
+            if($this->_hasPermission(self::PERMISSION_LIST_SHOW_OWN_IN_OTHER_GROUP)) {
+                $or[] = self::SETTING_URL_USER_CREATE . " = '" . YOURLS_USER . "'";
+            }
+
+            $where .= " AND (" . implode(' OR ', $or) . ")";
+        }
+
+        return $where;
+    }
+
+    /**
+     * Get own groups
+     *
+     * @return array
+     */
+    private function _getOwnGroups()
+    {
+        return array_intersect_key($this->_options['allowed_groups'], $this->getSession('groups', 'laemmi-yourls-easy-ldap'));
+    }
+
+    /**
+     * Has permission to right
+     *
+     * @param $permission
+     * @return bool
+     */
+    protected function _hasPermission($permission)
+    {
+        $permissions = $this->helperGetAllowedPermissions();
+
+        return isset($permissions[$permission]);
     }
 }

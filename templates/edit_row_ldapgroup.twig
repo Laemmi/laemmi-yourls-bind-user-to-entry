@@ -1,0 +1,21 @@
+<tr id="edit-{{ id }}" class="edit-row laemmi_edit_ldapgroup_row" data-id="{{ id }}">
+    <td colspan="5">
+        <form action="admin-ajax.php" method="post">
+            <input type="hidden" name="action" value="laemmi_edit_ldapgroup_save" />
+            <input type="hidden" name="keyword" value="{{ keyword }}" />
+            <input type="hidden" name="nonce" value="{{ nonce }}" />
+            <div class="form-group">
+                <label for="ldapgroup[]">{{ yourls__('Group') }}:</label>
+                <select class="form-control" name="ldapgroup[]" multiple>
+                    {% for key,val in ldapgrouplist %}
+                        <option value="{{ key }}"{% if key in ldapgrouplist_value %} selected{% endif %}>{{ val }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </td>
+    <td colspan="1">
+        <input class="button" type="button" name="save" value="{{ yourls__('Save', 'default') }}">
+        <input class="button" type="button" name="cancel" value="{{ yourls__('Cancel', 'default') }}">
+    </td>
+</tr>
