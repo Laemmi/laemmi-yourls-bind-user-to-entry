@@ -52,7 +52,6 @@ class Plugin extends AbstractDefault
     const SETTING_URL_USER_CREATE = 'laemmi_user_create';
     const SETTING_URL_USER_UPDATE = 'laemmi_user_update';
     const SETTING_URL_TIMESTAMP_UPDATE = 'laemmi_timestamp_update';
-
     const SETTING_URL_LDAPGROUP = 'laemmi_ldapgroup';
 
     /**
@@ -330,15 +329,13 @@ class Plugin extends AbstractDefault
             return array();
         }
 
-        $permissions = $this->helperGetAllowedPermissions();
-
-        if(! isset($permissions[self::PERMISSION_ACTION_EDIT])) {
+        if(! $this->_hasPermission(self::PERMISSION_ACTION_EDIT)) {
             if($url_result->{self::SETTING_URL_USER_CREATE} && YOURLS_USER !== $url_result->{self::SETTING_URL_USER_CREATE}) {
                 unset($actions['edit']);
             }
         }
 
-        if(! isset($permissions[self::PERMISSION_ACTION_DELETE])) {
+        if(! $this->_hasPermission(self::PERMISSION_ACTION_DELETE)) {
             if($url_result->{self::SETTING_URL_USER_CREATE} && YOURLS_USER !== $url_result->{self::SETTING_URL_USER_CREATE}) {
                 unset($actions['delete']);
             }
@@ -504,18 +501,5 @@ class Plugin extends AbstractDefault
     private function _getOwnGroups()
     {
         return array_intersect_key($this->_options['allowed_groups'], $this->getSession('groups', 'laemmi-yourls-easy-ldap'));
-    }
-
-    /**
-     * Has permission to right
-     *
-     * @param $permission
-     * @return bool
-     */
-    protected function _hasPermission($permission)
-    {
-        $permissions = $this->helperGetAllowedPermissions();
-
-        return isset($permissions[$permission]);
     }
 }
