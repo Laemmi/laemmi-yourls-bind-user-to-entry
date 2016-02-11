@@ -198,6 +198,14 @@ class Plugin extends AbstractDefault
             $data = [key($groups)];
         }
 
+        $infos = yourls_get_keyword_infos($keyword);
+        if($infos) {
+            $ldapgroups = array_flip((array) @json_decode($infos[self::SETTING_URL_LDAPGROUP], true));
+            $owngroups = $this->_getOwnGroups();
+            $diff = array_diff_key($ldapgroups, $owngroups);
+            $data = array_merge($data, array_flip($diff));
+        }
+
         $this->updateUrlSetting([
             self::SETTING_URL_USER_CREATE => YOURLS_USER,
             self::SETTING_URL_USER_UPDATE => YOURLS_USER,
