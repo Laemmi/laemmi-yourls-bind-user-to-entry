@@ -65,6 +65,8 @@ class Plugin extends AbstractDefault
     const PERMISSION_LIST_SHOW_OTHER_IN_OWN_GROUP = 'list-show-other-in-own-group';
     const PERMISSION_ACTION_ADD_GROUP = 'action-add-ldapgroup';
     const PERMISSION_ACTION_EDIT_GROUP = 'action-edit-ldapgroup';
+    const PERMISSION_ACTION_ADD_OTHER_GROUP = 'action-add-other-ldapgroup';
+    const PERMISSION_ACTION_EDIT_OTHER_GROUP = 'action-edit-other-ldapgroup';
 
     /**
      * Settings for url table
@@ -100,6 +102,8 @@ class Plugin extends AbstractDefault
         self::PERMISSION_LIST_SHOW_OWN_IN_OTHER_GROUP,
         self::PERMISSION_ACTION_ADD_GROUP,
         self::PERMISSION_ACTION_EDIT_GROUP,
+        self::PERMISSION_ACTION_ADD_OTHER_GROUP,
+        self::PERMISSION_ACTION_EDIT_OTHER_GROUP,
     ];
 
     /**
@@ -422,11 +426,17 @@ class Plugin extends AbstractDefault
         $infos = yourls_get_keyword_infos($keyword);
         $ldapgrouplist_value = (array) @json_decode($infos[self::SETTING_URL_LDAPGROUP], true);
 
+        if($this->_hasPermission(self::PERMISSION_ACTION_ADD_OTHER_GROUP)) {
+            $ldapgrouplist = $this->_options['ldapgrouplist'];
+        } else {
+            $ldapgrouplist = array_intersect_key($this->_options['ldapgrouplist'], $this->getSession('groups', 'laemmi-yourls-easy-ldap'));
+        }
+
         $html = $this->getTemplate()->render('edit_row_ldapgroup', [
             'keyword' => $keyword,
             'nonce' => $nonce,
             'id' => $id,
-            'ldapgrouplist' => $this->_options['ldapgrouplist'],
+            'ldapgrouplist' => $ldapgrouplist,
             'ldapgrouplist_value' => $ldapgrouplist_value,
         ]);
 
