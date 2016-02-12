@@ -210,7 +210,7 @@ class Plugin extends AbstractDefault
             self::SETTING_URL_USER_CREATE => YOURLS_USER,
             self::SETTING_URL_USER_UPDATE => YOURLS_USER,
             self::SETTING_URL_TIMESTAMP_UPDATE => $this->getDateTime()->format('c'),
-            self::SETTING_URL_LDAPGROUP => json_encode($data),
+            self::SETTING_URL_LDAPGROUP => $data ? json_encode($data) : null,
         ], $keyword);
 
         // Use in table_add_row_cell_array
@@ -506,6 +506,17 @@ class Plugin extends AbstractDefault
             }
 
             $where .= " AND (" . implode(' OR ', $or) . ")";
+        }
+
+        $ldapgrouplist = $this->getRequest('ldapgrouplist');
+        if($ldapgrouplist) {
+            $ldapgrouplist = array_filter($ldapgrouplist);
+            array_walk($ldapgrouplist, function (&$val) {
+                $val = self::SETTING_URL_LDAPGROUP . " RLIKE '\"" . $val . "\"'";
+            });
+            if($ldapgrouplist) {
+                $where .= " AND (" . implode(' OR ', $ldapgrouplist) . ")";
+            }
         }
 
         return $where;
