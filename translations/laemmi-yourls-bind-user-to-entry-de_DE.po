@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2016-01-21 17:25+0100\n"
-"PO-Revision-Date: 2016-01-21 17:26+0100\n"
+"POT-Creation-Date: 2016-02-15 14:34+0100\n"
+"PO-Revision-Date: 2016-02-15 14:35+0100\n"
 "Last-Translator: Michael Lämmlein <m.laemmlein@wdv.de>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -16,42 +16,51 @@ msgstr ""
 "X-Poedit-SearchPath-0: lib\n"
 "X-Poedit-SearchPath-1: templates\n"
 
-#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:251
-#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:293
-#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:295
+#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:268
+#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:311
+#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:313
 msgid "Create"
 msgstr "Erstellt"
 
-#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:265
-#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:301
+#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:282
+#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:319
 msgid "Changed"
 msgstr "Geändert"
 
-#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:275
-#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:306
-msgid "Groups"
-msgstr "Gruppen"
+#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:292
+#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:324
+msgid "Projects"
+msgstr "Projekte"
 
-#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:309
+#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:327
 msgid "IP"
 msgstr "IP"
 
-#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:361
-msgid "Edit Group"
-msgstr "Gruppe bearbeiten"
+#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:385
+msgid "Edit Projects"
+msgstr "Projekt bearbeiten"
 
-#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:454
+#: lib/Laemmi/Yourls/Plugin/BindUserToEntry/Plugin.php:485
 msgid "Link updated in database"
 msgstr "Url wurde in Datenbank aktualisiert"
 
-#: /private/var/folders/91/hprv3g_9hprsjf9n25dwk2km000qq7/T/56a10669b7b96Rnes58:8
-msgid "Group"
-msgstr "Gruppe"
+#: /private/var/folders/91/hprv3g_9hprsjf9n25dwk2km000qq7/T/56c1d3fbc7ebeRIsXVH:8
+msgid "Project"
+msgstr "Projekt"
 
-#: /private/var/folders/91/hprv3g_9hprsjf9n25dwk2km000qq7/T/56a10669b7b96Rnes58:18
+#: /private/var/folders/91/hprv3g_9hprsjf9n25dwk2km000qq7/T/56c1d3fbc7ebeRIsXVH:18
 msgid "Save"
 msgstr "Speichern"
 
-#: /private/var/folders/91/hprv3g_9hprsjf9n25dwk2km000qq7/T/56a10669b7b96Rnes58:19
+#: /private/var/folders/91/hprv3g_9hprsjf9n25dwk2km000qq7/T/56c1d3fbc7ebeRIsXVH:19
 msgid "Cancel"
 msgstr "Abbrechen"
+
+#~ msgid "Groups"
+#~ msgstr "Gruppen"
+
+#~ msgid "Edit Group"
+#~ msgstr "Gruppe bearbeiten"
+
+#~ msgid "Group"
+#~ msgstr "Gruppe"

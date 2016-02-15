@@ -5,10 +5,10 @@
             <input type="hidden" name="keyword" value="{{ keyword }}" />
             <input type="hidden" name="nonce" value="{{ nonce }}" />
             <div class="form-group">
-                <label for="ldapgroup[]">{{ yourls__('Group') }}:</label>
-                <select class="form-control" name="ldapgroup[]" multiple>
-                    {% for key,val in ldapgrouplist %}
-                        <option value="{{ key }}"{% if key in ldapgrouplist_value %} selected{% endif %}>{{ val }}</option>
+                <label for="project[]">{{ yourls__('Project') }}:</label>
+                <select class="form-control" name="project[]" multiple>
+                    {% for key,val in projectlist %}
+                        <option value="{{ key }}"{% if key in projectlist_value %} selected{% endif %}>{{ val }}</option>
                     {% endfor %}
                 </select>
             </div>

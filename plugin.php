@@ -47,7 +47,7 @@ if (!yourls_is_API()) {
         new Laemmi\Yourls\Plugin\BindUserToEntry\Plugin([
             'db' => $ydb,
             'allowed_groups' => defined('LAEMMI_EASY_LDAP_ALLOWED_GROUPS') ? json_decode(LAEMMI_EASY_LDAP_ALLOWED_GROUPS, true) : [],
-            'ldapgrouplist' => defined('LAEMMI_BIND_USER_TO_ENTRY_GROUPLIST') ? json_decode(LAEMMI_BIND_USER_TO_ENTRY_GROUPLIST, true) : [],
+            'projectlist' => defined('LAEMMI_BIND_USER_TO_ENTRY_PROJECTLIST') ? json_decode(LAEMMI_BIND_USER_TO_ENTRY_PROJECTLIST, true) : [],
         ]);
     } else {
         if('activate' === (isset($_GET['action']) ? $_GET['action'] : null) && 'laemmi-yourls-bind-user-to-entry' === $_GET['plugin']) {
