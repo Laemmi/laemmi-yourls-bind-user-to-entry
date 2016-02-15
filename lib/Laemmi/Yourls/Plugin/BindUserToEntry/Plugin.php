@@ -364,6 +364,9 @@ class Plugin extends AbstractDefault
             }
         }
 
+        if (!$this->_hasPermission(self::PERMISSION_ACTION_EDIT_PROJECT)) {
+            return $actions;
+        }
         if(! $this->_hasPermission(self::PERMISSION_ACTION_EDIT_OTHER)) {
             if (!$this->_hasPermission(self::PERMISSION_ACTION_EDIT_PROJECT, $url_result->{self::SETTING_URL_PROJECTS})) {
                 if ($url_result->{self::SETTING_URL_USER_CREATE} && YOURLS_USER !== $url_result->{self::SETTING_URL_USER_CREATE}) {
