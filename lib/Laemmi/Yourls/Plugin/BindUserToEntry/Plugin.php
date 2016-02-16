@@ -113,6 +113,13 @@ class Plugin extends AbstractDefault
     ];
 
     /**
+     * Keyword
+     *
+     * @var null
+     */
+    private $_keyword = null;
+
+    /**
      * Init
      */
     public function init()
@@ -228,9 +235,25 @@ class Plugin extends AbstractDefault
         $url_result->{self::SETTING_URL_TIMESTAMP_UPDATE} = $this->getDateTime()->format('c');
         $url_result->{self::SETTING_URL_USER_UPDATE} = YOURLS_USER;
         $url_result->{self::SETTING_URL_PROJECTS} = json_encode($data);
+
+//        $this->_keyword = $keyword;
     }
 
     ####################################################################################################################
+
+    /**
+     * Filter yourls_link
+     *
+     * @return mixed
+     */
+    public function filter_yourls_link()
+    {
+        list($link, $keyword) = func_get_args();
+
+        $this->_keyword = $keyword;
+
+        return $link;
+    }
 
     /**
      * Filter edit_link
@@ -342,7 +365,7 @@ class Plugin extends AbstractDefault
      */
     public function filter_table_add_row_action_array()
     {
-        global $url_result, $keyword;
+        global $url_result;
 
         list($actions) = func_get_args();
 
@@ -377,15 +400,11 @@ class Plugin extends AbstractDefault
             }
         }
 
-        if(!$keyword) {
-            return $actions;
-        }
-
-        $id = yourls_string2htmlid($keyword);
+        $id = yourls_string2htmlid($this->_keyword);
 
         $href = yourls_nonce_url(
             'laemmi_edit_ldapgroup_' . $id,
-            yourls_add_query_arg(['action' => 'laemmi_edit_ldapgroup', 'keyword' => $keyword], yourls_admin_url('admin-ajax.php'))
+            yourls_add_query_arg(['action' => 'laemmi_edit_ldapgroup', 'keyword' => $this->_keyword], yourls_admin_url('admin-ajax.php'))
         );
 
         $actions['laemmi_edit_ldapgroup'] = [
