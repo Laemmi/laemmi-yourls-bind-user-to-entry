@@ -29,7 +29,7 @@
 $(function() {
 
     // Edit button, show form
-    $(".button_laemmi_edit_ldapgroup").click(function(e) {
+    $('#main_table').on('click', '.button_laemmi_edit_ldapgroup', function(e) {
         e.preventDefault();
         var self = $(this);
         if(self.hasClass('disabled')) {

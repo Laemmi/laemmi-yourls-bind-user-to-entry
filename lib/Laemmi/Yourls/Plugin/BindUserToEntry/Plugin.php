@@ -212,6 +212,8 @@ class Plugin extends AbstractDefault
             $data = array_merge($data, array_flip($diff));
         }
 
+        $this->setSession('projects', $data);
+
         $this->updateUrlSetting([
             self::SETTING_URL_USER_CREATE => YOURLS_USER,
             self::SETTING_URL_USER_UPDATE => YOURLS_USER,
@@ -373,6 +375,10 @@ class Plugin extends AbstractDefault
                     return $actions;
                 }
             }
+        }
+
+        if(!$keyword) {
+            return $actions;
         }
 
         $id = yourls_string2htmlid($keyword);
