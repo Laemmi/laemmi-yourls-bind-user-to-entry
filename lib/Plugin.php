@@ -19,11 +19,10 @@
  * IN THE SOFTWARE.
  *
  * @category    laemmi-yourls-bind-user-to-entry
- * @package     Plugin.php
  * @author      Michael Lämmlein <laemmi@spacerabbit.de>
- * @copyright   ©2015-2016 laemmi
+ * @copyright   ©2015 laemmi
  * @license     http://www.opensource.org/licenses/mit-license.php MIT-License
- * @version     1.0.0
+ * @version     1.0.6
  * @since       20.10.15
  */
 
@@ -32,13 +31,9 @@
  */
 namespace Laemmi\Yourls\Plugin\BindUserToEntry;
 
+use Exception;
 use Laemmi\Yourls\Plugin\AbstractDefault;
 
-/**
- * Class Plugin
- *
- * @package Laemmi\Yourls\Plugin\BindUserToEntry
- */
 class Plugin extends AbstractDefault
 {
     /**
@@ -67,7 +62,6 @@ class Plugin extends AbstractDefault
     const PERMISSION_ACTION_EDIT_PROJECT = 'action-edit-project';
     const PERMISSION_ACTION_ADD_OTHER_PROJECT = 'action-add-other-project';
     const PERMISSION_ACTION_EDIT_OTHER_PROJECT = 'action-edit-other-project';
-
     const PERMISSION_ACTION_EDIT = 'action-edit';
     const PERMISSION_ACTION_DELETE = 'action-delete';
 
@@ -79,7 +73,7 @@ class Plugin extends AbstractDefault
     protected $_setting_url = [
         self::SETTING_URL_USER_CREATE => ["field" => "VARCHAR(255) NULL"],
         self::SETTING_URL_USER_UPDATE => ["field" => "VARCHAR(255) NULL"],
-        self::SETTING_URL_TIMESTAMP_UPDATE => ["field" => "TIMESTAMP"],
+        self::SETTING_URL_TIMESTAMP_UPDATE => ["field" => "TIMESTAMP NULL DEFAULT NULL"],
         self::SETTING_URL_PROJECTS => ["field" => "TEXT"]
     ];
 
@@ -107,7 +101,6 @@ class Plugin extends AbstractDefault
         self::PERMISSION_ACTION_EDIT_PROJECT,
         self::PERMISSION_ACTION_ADD_OTHER_PROJECT,
         self::PERMISSION_ACTION_EDIT_OTHER_PROJECT,
-
         self::PERMISSION_ACTION_EDIT,
         self::PERMISSION_ACTION_DELETE,
     ];
@@ -142,17 +135,17 @@ class Plugin extends AbstractDefault
      * Action activated_plugin
      *
      * @param array $args
-     * @throws \Exception
+     * @throws Exception
      */
     public function action_activated_plugin(array $args)
     {
         list($plugin) = $args;
 
-        if(false === stripos($plugin, self::APP_NAMESPACE)) {
+        if (false === stripos($plugin, self::APP_NAMESPACE)) {
             return;
         }
 
-        foreach($this->_setting_url as $key => $val) {
+        foreach ($this->_setting_url as $key => $val) {
             $this->addUrlSetting($key, $val);
         }
     }
@@ -161,19 +154,15 @@ class Plugin extends AbstractDefault
      * Action deactivated_plugin
      *
      * @param array $args
-     * @throws \Exception
+     * @throws Exception
      */
     public function action_deactivated_plugin(array $args)
     {
-        list($plugin) = $args;
+        list ($plugin) = $args;
 
-        if(false === stripos($plugin, self::APP_NAMESPACE)) {
+        if (false === stripos($plugin, self::APP_NAMESPACE)) {
             return;
         }
-
-//        foreach($this->_setting_url as $key => $val) {
-//            $this->dropUrlSetting($key, $val);
-//        }
     }
 
     /**
@@ -183,9 +172,9 @@ class Plugin extends AbstractDefault
      */
     public function action_html_head(array $args)
     {
-        list($context) = $args;
+        list ($context) = $args;
 
-        if('index' === $context) {
+        if ('index' === $context) {
             echo $this->getJsScript('assets/admin.js');
             echo $this->getCssStyle();
         }
@@ -197,13 +186,13 @@ class Plugin extends AbstractDefault
      * Action insert_link
      *
      * @param array $args
-     * @throws \Exception
+     * @throws Exception
      */
     public function action_insert_link(array $args)
     {
-        list($insert, $url, $keyword, $title, $timestamp, $ip) = $args;
+        list ($insert, $url, $keyword, $title, $timestamp, $ip) = $args;
 
-        if($this->_hasPermission(self::PERMISSION_ACTION_ADD_PROJECT)) {
+        if ($this->_hasPermission(self::PERMISSION_ACTION_ADD_PROJECT)) {
             $project = $this->getRequest('project');
             $data = is_array($project)?$project:[];
         } else {
@@ -212,10 +201,15 @@ class Plugin extends AbstractDefault
         }
 
         $infos = yourls_get_keyword_infos($keyword);
-        if($infos) {
-            $projectlist = array_flip((array) @json_decode($infos[self::SETTING_URL_PROJECTS], true));
-            $owngroups = $this->_getOwnGroups();
-            $diff = array_diff_key($projectlist, $owngroups);
+        if ($infos) {
+            $projectlist_value = array_flip((array) @json_decode($infos[self::SETTING_URL_PROJECTS], true));
+            $projectlist = [];
+            foreach ($this->_options['projectlist'] as $key => $val) {
+                if ($this->_hasPermission(self::PERMISSION_ACTION_ADD_OTHER_PROJECT) || $this->_hasPermission('action-edit', [$key])) {
+                    $projectlist[$key] = $key;
+                }
+            }
+            $diff = array_diff_key($projectlist_value, $projectlist);
             $data = array_merge($data, array_flip($diff));
         }
 
@@ -224,7 +218,7 @@ class Plugin extends AbstractDefault
         $this->updateUrlSetting([
             self::SETTING_URL_USER_CREATE => YOURLS_USER,
             self::SETTING_URL_USER_UPDATE => YOURLS_USER,
-            self::SETTING_URL_TIMESTAMP_UPDATE => $this->getDateTime()->format('c'),
+            self::SETTING_URL_TIMESTAMP_UPDATE => $this->getDateTime()->format('Y-m-d H:i:s'),
             self::SETTING_URL_PROJECTS => $data ? json_encode($data) : null,
         ], $keyword);
 
@@ -232,11 +226,9 @@ class Plugin extends AbstractDefault
         global $url_result;
         $url_result = new \stdClass();
         $url_result->{self::SETTING_URL_USER_CREATE} = YOURLS_USER;
-        $url_result->{self::SETTING_URL_TIMESTAMP_UPDATE} = $this->getDateTime()->format('c');
         $url_result->{self::SETTING_URL_USER_UPDATE} = YOURLS_USER;
+        $url_result->{self::SETTING_URL_TIMESTAMP_UPDATE} = $this->getDateTime()->format('Y-m-d H:i:s');
         $url_result->{self::SETTING_URL_PROJECTS} = json_encode($data);
-
-//        $this->_keyword = $keyword;
     }
 
     ####################################################################################################################
@@ -259,20 +251,34 @@ class Plugin extends AbstractDefault
      * Filter edit_link
      *
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function filter_edit_link()
     {
-        list($return, $url, $keyword, $newkeyword, $title, $new_url_already_there, $keyword_is_ok) = func_get_args();
+        list ($return, $url, $keyword, $newkeyword, $title, $new_url_already_there, $keyword_is_ok) = func_get_args();
 
         if ((! $new_url_already_there || yourls_allow_duplicate_longurls()) && $keyword_is_ok) {
             $this->updateUrlSetting([
                 self::SETTING_URL_USER_UPDATE => YOURLS_USER,
-                self::SETTING_URL_TIMESTAMP_UPDATE => $this->getDateTime()->format('c'),
+                self::SETTING_URL_TIMESTAMP_UPDATE => $this->getDateTime()->format('Y-m-d H:i:s'),
             ], ($newkeyword ? $newkeyword : $keyword));
         }
 
         return $return;
+    }
+
+    /**
+     * Filter table_head_cells
+     *
+     * @return array
+     */
+    public function filter_table_head_cells()
+    {
+        list ($arr) = func_get_args();
+
+        $arr = array('project' => yourls__('Project', self::APP_NAMESPACE)) + $arr;
+
+        return $arr;
     }
 
     /**
@@ -284,16 +290,16 @@ class Plugin extends AbstractDefault
     {
         global $url_result;
 
-        list($cells, $keyword, $url, $title, $ip, $clicks, $timestamp) = func_get_args();
+        list ($cells, $keyword, $url, $title, $ip, $clicks, $timestamp) = func_get_args();
 
-        if(!isset($url_result)) {
+        if (!isset($url_result)) {
             return $cells;
         }
 
         $cells['timestamp']['template'] = '<div class="display-large"><div><span>' . yourls__('Create', self::APP_NAMESPACE) . ':</span> <span>%date%</span> <span>%user_create%</span></div>';
         $cells['timestamp']['date'] = $this->getDateTimeDisplay($timestamp)->format('d.m.Y H:i');
 
-        if($url_result->{self::SETTING_URL_USER_CREATE}) {
+        if ($url_result->{self::SETTING_URL_USER_CREATE}) {
             if(YOURLS_USER === $url_result->{self::SETTING_URL_USER_CREATE}) {
                 $cells['timestamp']['user_create'] = '<strong>' . $url_result->{self::SETTING_URL_USER_CREATE} . '</strong>';
             } else {
@@ -303,17 +309,17 @@ class Plugin extends AbstractDefault
             $cells['timestamp']['user_create'] = '';
         }
 
-        if(0 < strtotime($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})) {
+        if (0 < strtotime($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})) {
             $cells['timestamp']['template'] .= '<div><span>' . yourls__('Changed', self::APP_NAMESPACE) .':</span> <span>%date_update%</span> <span>%user_update%</span></div>';
             $cells['timestamp']['date_update'] = $this->getDateTimeDisplay($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('d.m.Y H:i');
-            if(YOURLS_USER === $url_result->{self::SETTING_URL_USER_UPDATE}) {
+            if (YOURLS_USER === $url_result->{self::SETTING_URL_USER_UPDATE}) {
                 $cells['timestamp']['user_update'] = '<strong>' . $url_result->{self::SETTING_URL_USER_UPDATE} . '</strong>';
             } else {
                 $cells['timestamp']['user_update'] = $url_result->{self::SETTING_URL_USER_UPDATE};
             }
         }
 
-        if($url_result->{self::SETTING_URL_PROJECTS}) {
+        if( $url_result->{self::SETTING_URL_PROJECTS}) {
             $cells['timestamp']['template'] .= '<div><span>' . yourls__('Projects', self::APP_NAMESPACE) . ':</span> <span>%ldap_groups%</span></div>';
             $cells['timestamp']['ldap_groups'] = '';
             $arr = json_decode($url_result->{self::SETTING_URL_PROJECTS}, true);
@@ -321,7 +327,6 @@ class Plugin extends AbstractDefault
                 $ldap_groups = array_map(function ($val) {
                     if (isset($this->_options['projectlist'][$val])) {
                         return $val;
-                        return $this->_options['projectlist'][$val];
                     }
                 }, $arr);
                 $cells['timestamp']['ldap_groups'] = implode(', ', $ldap_groups);
@@ -332,19 +337,19 @@ class Plugin extends AbstractDefault
 
         $title = [];
         $cells['timestamp']['date_small'] = $this->getDateTimeDisplay($timestamp)->format('d.m.Y');
-        if($cells['timestamp']['user_create']) {
+        if ($cells['timestamp']['user_create']) {
             $title[] = yourls__('Create', self::APP_NAMESPACE) . ': %date% (%user_create_small%)';
         } else {
             $title[] = yourls__('Create', self::APP_NAMESPACE) . ': %date%';
         }
 
-        if(isset($cells['timestamp']['date_update'])) {
+        if (isset($cells['timestamp']['date_update'])) {
             $cells['timestamp']['date_small'] = $this->getDateTimeDisplay($url_result->{self::SETTING_URL_TIMESTAMP_UPDATE})->format('d.m.Y');
             $cells['timestamp']['user_update_small'] = strip_tags($cells['timestamp']['user_update']);
             $title[] = yourls__('Changed', self::APP_NAMESPACE) . ': %date_update% (%user_update_small%)';
         }
 
-        if(isset($cells['timestamp']['ldap_groups'])) {
+        if (isset($cells['timestamp']['ldap_groups'])) {
             $cells['timestamp']['ldap_groups_small'] = $cells['timestamp']['ldap_groups'];
             $title[] = yourls__('Projects', self::APP_NAMESPACE) . ': %ldap_groups_small%';
         }
@@ -353,6 +358,23 @@ class Plugin extends AbstractDefault
 
         $cells['timestamp']['template'] .= '<div title="' . implode('&#13;', $title) .'" class="display-small">%date_small%</div>';
         $cells['timestamp']['user_create_small'] = strip_tags($cells['timestamp']['user_create']);
+
+        $projectlist = [];
+        if ($url_result->{self::SETTING_URL_PROJECTS}) {
+            $arr = json_decode($url_result->{self::SETTING_URL_PROJECTS}, true);
+            if (is_array($arr)) {
+                $projectlist = array_map(function ($val) {
+                    if (isset($this->_options['projectlist'][$val])) {
+                        return $val;
+                    }
+                }, $arr);
+            }
+        }
+        $project = array(
+            'template' => '%project%',
+            'project'  => implode(', ', $projectlist)
+        );
+        $cells = array('project' => $project) + $cells;
 
         return $cells;
     }
@@ -367,13 +389,13 @@ class Plugin extends AbstractDefault
     {
         global $url_result;
 
-        list($actions) = func_get_args();
+        list ($actions) = func_get_args();
 
-        if(! isset($url_result)) {
+        if (!isset($url_result)) {
             return array();
         }
 
-        if(! $this->_hasPermission(self::PERMISSION_ACTION_EDIT_OTHER)) {
+        if (!$this->_hasPermission(self::PERMISSION_ACTION_EDIT_OTHER)) {
             if (!$this->_hasPermission(self::PERMISSION_ACTION_EDIT, $url_result->{self::SETTING_URL_PROJECTS})) {
                 if ($url_result->{self::SETTING_URL_USER_CREATE} && YOURLS_USER !== $url_result->{self::SETTING_URL_USER_CREATE}) {
                     unset($actions['edit']);
@@ -381,7 +403,7 @@ class Plugin extends AbstractDefault
             }
         }
 
-        if(! $this->_hasPermission(self::PERMISSION_ACTION_DELETE_OTHER)) {
+        if (!$this->_hasPermission(self::PERMISSION_ACTION_DELETE_OTHER)) {
             if (!$this->_hasPermission(self::PERMISSION_ACTION_DELETE, $url_result->{self::SETTING_URL_PROJECTS})) {
                 if ($url_result->{self::SETTING_URL_USER_CREATE} && YOURLS_USER !== $url_result->{self::SETTING_URL_USER_CREATE}) {
                     unset($actions['delete']);
@@ -392,7 +414,7 @@ class Plugin extends AbstractDefault
         if (!$this->_hasPermission(self::PERMISSION_ACTION_EDIT_PROJECT)) {
             return $actions;
         }
-        if(! $this->_hasPermission(self::PERMISSION_ACTION_EDIT_OTHER)) {
+        if (!$this->_hasPermission(self::PERMISSION_ACTION_EDIT_OTHER)) {
             if (!$this->_hasPermission(self::PERMISSION_ACTION_EDIT_PROJECT, $url_result->{self::SETTING_URL_PROJECTS})) {
                 if ($url_result->{self::SETTING_URL_USER_CREATE} && YOURLS_USER !== $url_result->{self::SETTING_URL_USER_CREATE}) {
                     return $actions;
@@ -425,7 +447,7 @@ class Plugin extends AbstractDefault
      */
     public function filter_admin_list_where()
     {
-        list($where) = func_get_args();
+        list ($where) = func_get_args();
 
         $where = $this->_getQuery($where);
 
@@ -439,11 +461,11 @@ class Plugin extends AbstractDefault
      */
     public function filter_get_db_stats()
     {
-        list($return, $where) = func_get_args();
+        list ($return, $where) = func_get_args();
 
         $where = $this->_getQuery($where);
 
-        if($where) {
+        if ($where) {
             $where = 'WHERE 1=1 ' . $where;
         }
 
@@ -478,8 +500,8 @@ class Plugin extends AbstractDefault
         $projectlist_value = (array) @json_decode($infos[self::SETTING_URL_PROJECTS], true);
 
         $projectlist = [];
-        foreach($this->_options['projectlist'] as $key => $val) {
-            if($this->_hasPermission(self::PERMISSION_ACTION_ADD_OTHER_PROJECT) || $this->_hasPermission('action-edit', [$key])) {
+        foreach ($this->_options['projectlist'] as $key => $val) {
+            if ($this->_hasPermission(self::PERMISSION_ACTION_ADD_OTHER_PROJECT) || $this->_hasPermission('action-edit', [$key])) {
                 $projectlist[$key] = $key;
             }
         }
@@ -542,11 +564,11 @@ class Plugin extends AbstractDefault
             $where .= " AND (" . implode(' OR ', $or) . ")";
         }
 
-        if(! $this->_hasPermission(self::PERMISSION_LIST_SHOW_OTHER_PROJECT)) {
+        if (!$this->_hasPermission(self::PERMISSION_LIST_SHOW_OTHER_PROJECT)) {
             $or = $or_owngroups;
             $or[] = self::SETTING_URL_PROJECTS . " IS NULL";
 
-            if($this->_hasPermission(self::PERMISSION_LIST_SHOW_OWN_IN_OTHER_PROJECT)) {
+            if ($this->_hasPermission(self::PERMISSION_LIST_SHOW_OWN_IN_OTHER_PROJECT)) {
                 $or[] = self::SETTING_URL_USER_CREATE . " = '" . YOURLS_USER . "'";
             }
 
@@ -554,12 +576,12 @@ class Plugin extends AbstractDefault
         }
 
         $projectlist = $this->getRequest('projectlist');
-        if($projectlist) {
+        if ($projectlist) {
             $projectlist = array_filter($projectlist);
             array_walk($projectlist, function (&$val) {
                 $val = self::SETTING_URL_PROJECTS . " RLIKE '\"" . $val . "\"'";
             });
-            if($projectlist) {
+            if ($projectlist) {
                 $where .= " AND (" . implode(' OR ', $projectlist) . ")";
             }
         }
@@ -582,15 +604,15 @@ class Plugin extends AbstractDefault
         $arr = array();
         foreach ($this->_options['projectlist'] as $key => $val) {
             $inter = array_intersect_key($val, $this->getSession('groups', 'laemmi-yourls-easy-ldap'));
-            if($inter) {
-                foreach($inter as $_val) {
+            if ($inter) {
+                foreach ($inter as $_val) {
                     if (in_array($permission, $_val)) {
                         $arr[] = $key;
                     }
                 }
             }
         }
-        return $arr;
+        return array_combine($arr, $arr);
     }
 
     ####################################################################################################################
@@ -603,10 +625,10 @@ class Plugin extends AbstractDefault
      */
     protected function helperGetAllowedPermissions(array $projects = array())
     {
-        if($this->getSession('login', 'laemmi-yourls-easy-ldap')) {
+        if ($this->getSession('login', 'laemmi-yourls-easy-ldap')) {
             $inter = array_intersect_key($this->_options['allowed_groups'], $this->getSession('groups', 'laemmi-yourls-easy-ldap'));
 
-            if($projects) {
+            if ($projects) {
                 $inter2 = array();
                 foreach ($projects as $val) {
                     foreach ($this->_options['projectlist'] as $_key => $_val) {
@@ -641,7 +663,7 @@ class Plugin extends AbstractDefault
      */
     protected function _hasPermission($permission, $projects = '')
     {
-        if(!is_array($projects)) {
+        if (!is_array($projects)) {
             $projects = (array)@json_decode($projects, true);
         }
 

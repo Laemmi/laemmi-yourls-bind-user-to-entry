@@ -1,7 +1,7 @@
 # laemmi-yourls-user-to-entry
 Plugin for YOURLS 1.7
 
-##Description
+## Description
 Bind login username to url entry. It generates an user create and user update entry. Localization for german.
 Use this plugin with "laemmi-yourls-easy-ldap" plugin.
 You must install "laemmi-yourls-default-tools" fist.
@@ -15,19 +15,19 @@ You must install "laemmi-yourls-default-tools" fist.
 
 ### Available config values
 #### Allowed ldap groupsnames with yourls action and list permissions
-define('LAEMMI_EASY_LDAP_ALLOWED_GROUPS', json_encode([
-    'MY-LDAP-GROUPNAME' => ['action-edit-other', 'action-delete-other', 'action-add-project', 'action-edit-project', 'action-add-other-project', 'action-edit-other-project'
-     'list-show-other', 'list-show-other-project', 'list-show-own-in-other-project', 'list-show-other-in-own-project']
-]));
+    define('LAEMMI_EASY_LDAP_ALLOWED_GROUPS', json_encode([
+        'MY-LDAP-GROUPNAME' => ['action-edit-other', 'action-delete-other', 'action-add-project', 'action-edit-project', 'action-add-other-project', 'action-edit-other-project'
+         'list-show-other', 'list-show-other-project', 'list-show-own-in-other-project', 'list-show-other-in-own-project']
+    ]));
 #### projects to set 
-define('LAEMMI_BIND_USER_TO_ENTRY_PROJECTLIST', json_encode([
-	'Project 1' => [
-	    'LDAP-GROUPNAME' => 'permissions .....'
-	],
-	'Project 2' => [
-        'LDAP-GROUPNAME' => 'permissions .....'
-    ]
-]));
+    define('LAEMMI_BIND_USER_TO_ENTRY_PROJECTLIST', json_encode([
+        'Project 1' => [
+            'LDAP-GROUPNAME' => 'permissions .....'
+        ],
+        'Project 2' => [
+            'LDAP-GROUPNAME' => 'permissions .....'
+        ]
+    ]));
 
 ### Permissions
 ##### Actions
